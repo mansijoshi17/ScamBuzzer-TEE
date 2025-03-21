@@ -44,10 +44,8 @@ export const Home = () => {
                 throw new Error(`Failed to analyze email: ${response.status} ${errorText}`);
             }
 
-            const data = await response.json();
-            console.log('Email Analysis:', data);
-            const analysis = data.choices[0].message.content;
-            console.log('Email Analysis:', analysis);
+            const data = await response.json(); 
+            const analysis = data.choices[0].message.content; 
         } catch (error) {
             console.error('Error analyzing email:', error);
         } 

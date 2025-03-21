@@ -18,15 +18,16 @@ export const SidebarComponents = () => {
                 >
                     <FaStar className={`hover:text-green-400 ${activeTab === 'contract' ? 'text-green-500' : 'text-gray-500'}`} />
                 </Link>
-                <Link to="/settings"
-                    className={`text-gray-500 text-2xl  cursor-pointer ${activeTab === 'settings' ? 'text-green-500' : ''}`}
-                >
-                    <FaCog className={`hover:text-green-400 ${activeTab === 'settings' ? 'text-green-500' : 'text-gray-500'}`} />
-                </Link>
+               
                 <Link to="/bookmark"
                     className={`text-gray-500 text-2xl  cursor-pointer ${activeTab === 'bookmark' ? 'text-green-500' : ''}`}
                 >
                     <FaBookmark className={`hover:text-green-400 ${activeTab === 'bookmark' ? 'text-green-500' : 'text-gray-500'}`} />
+                </Link>
+                <Link to="/settings"
+                    className={`text-gray-500 text-2xl  cursor-pointer ${activeTab === 'settings' ? 'text-green-500' : ''}`}
+                >
+                    <FaCog className={`hover:text-green-400 ${activeTab === 'settings' ? 'text-green-500' : 'text-gray-500'}`} />
                 </Link>
             </div>
         </div>

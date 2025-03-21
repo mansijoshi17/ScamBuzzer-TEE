@@ -1,57 +1,8 @@
-// import { useState } from "react";   
-// import { SidebarComponents } from "@/components/SidebarComponents"
-// import { FaShieldAlt } from "react-icons/fa";
-// import { Checkbox } from "@/components/home/checkbox";
-// import { Settings } from "@/components/Settings";
-// import { Home } from "@/components/Home";
-// import { ContractChecker } from "@/components/ContractChecker";
-
-// const App = () => { 
-//   const [activeTab, setActiveTab] = useState('home');  
-//   const [page, setPage] = useState('home');
-
-//   const handleTabChange = (tab: string) => {
-//     setActiveTab(tab);
-//     setPage(tab);
-//   };
-
-//   useEffect(() => {
-//     const handleUrlChange = () => {
-//       const path = window.location.pathname;
-//       setPage(path);
-//     };
-//     window.addEventListener('popstate', handleUrlChange);
-//   }, []);
-
-//   const renderPage = () => {
-//     switch (page) {
-//       case 'home':
-//         return <Home />; 
-//       case 'contract':
-//         return <ContractChecker />; 
-//       case 'settings':
-//         return <Settings />; 
-//       default:
-//         return <Checkbox />;
-//     }
-//   };
-//   return (
-//     <div className="flex h-screen bg-gray-900 border-1 border-gray-900"> 
-//       <SidebarComponents activeTab={activeTab} setActiveTab={handleTabChange} setPage={handleTabChange} /> 
-//       <div className="flex-1">
-//         <Header />
-//         {renderPage()} 
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default App;
+ 
 
 import { HashRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { Home } from "@/components/Home";
-import { Settings } from "@/components/Settings"; 
-import { ContractChecker } from "@/components/ContractChecker";
+import { Settings } from "@/components/Settings";  
 import { SidebarComponents } from "@/components/SidebarComponents";
 import { Header } from "@/components/Header";
 import Contract from "@/pages/Contract";
