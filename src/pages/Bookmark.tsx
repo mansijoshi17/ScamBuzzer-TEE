@@ -1,40 +1,93 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { CgCopy } from "react-icons/cg";
+import { v4 as uuidv4 } from 'uuid'; 
+import {  createSchema , writeCollectionData, readCollectionData} from '../utils/utils';
 import { FaTrash } from "react-icons/fa";
+import { CgCopy } from "react-icons/cg";
 
 const WalletBookmark = () => {
-  const [wallets, setWallets] = useState<any[]>([
-    { name: "Wallet 1", address: "0x1234567890123456789012345678901234567890" },
-    { name: "Wallet 2", address: "0x1234567890123456789012345678901234567890" },
-    { name: "Wallet 3", address: "0x1234567890123456789012345678901234567890" },    
-    { name: "Wallet 4", address: "0x1234567890123456789012345678901234567890" },
-    { name: "Wallet 5", address: "0x1234567890123456789012345678901234567890" },
-    { name: "Wallet 6", address: "0x1234567890123456789012345678901234567890" },
-    { name: "Wallet 7", address: "0x1234567890123456789012345678901234567890" },
-    { name: "Wallet 8", address: "0x1234567890123456789012345678901234567890" },
-    { name: "Wallet 9", address: "0x1234567890123456789012345678901234567890" },
-    { name: "Wallet 10", address: "0x1234567890123456789012345678901234567890" },
-  ]);
-  const [walletName, setWalletName] = useState("");
-  const [walletAddress, setWalletAddress] = useState("");
+    const [wallets, setWallets] = useState([]);
+    const [walletName, setWalletName] = useState("");
+    const [walletAddress, setWalletAddress] = useState("");
+    const [schemaId, setSchemaId] = useState("");
 
- 
-
-  // Save a new wallet
-  const saveWallet = () => {
-    if (!walletName || !walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-      toast.error(!walletName ? "Please enter both a name and wallet address." : "Please enter a valid wallet address.");
-      return;
+    async function main() {
+        try {
+            chrome.storage.local.get(['schemaId'], async (result) => {
+                if (!result.schemaId) {
+                    const newSchema = await createSchema(); 
+                    const schemaId = newSchema[0].schemaId;
+                    setSchemaId(schemaId); 
+                    chrome.storage.local.set({ schemaId }, () => {
+                        console.log('Schema ID stored in Chrome storage:', schemaId);
+                    });
+                } else {
+                    setSchemaId(result.schemaId);
+                    console.log('Schema ID retrieved from Chrome storage:', result.schemaId);
+                }
+            });
+        } catch (error: any) {
+            console.error('❌ Failed to use SecretVaultWrapper:', error.message);
+        }
     }
 
-    const newWallets = [...wallets, { name: walletName, address: walletAddress }];
-    chrome.storage.local.set({ wallets: newWallets }, () => {
-      setWallets(newWallets);
-      setWalletName("");
-      setWalletAddress("");
-    });
-  };
+    useEffect(() => {
+        main(); 
+    }, []);
+
+    useEffect(() => {
+        fetchWalletAddresses();
+    }, [schemaId]);
+
+    const saveWallet = async () => {
+        if (!walletName || !walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+            toast.error(!walletName ? "Please enter both a name and wallet address." : "Please enter a valid wallet address.");
+            return;
+        }
+
+        try {
+             
+            const dataToWrite = [
+                {
+                    _id: uuidv4(), 
+                    name: walletName,
+                    wallet_address: walletAddress 
+                }
+            ];
+
+            
+            const res = await  writeCollectionData(schemaId, dataToWrite);
+            console.log('res', res); 
+            const newWallets = [...wallets, { name: walletName, address: walletAddress }];
+            setWallets(newWallets);
+            console.log("Wallet saved successfully:", res);
+            toast.success("Wallet address saved successfully!");
+            
+            setWalletName("");
+            setWalletAddress("");
+        } catch (error) {
+            console.error("Error saving wallet:", error);
+            toast.error("Failed to save wallet address.");
+        }
+    };
+
+    const fetchWalletAddresses = async () => {
+        if (!schemaId) {
+            console.error('schemaId is required to fetch wallet addresses.');
+            return;
+        }
+        
+        try { 
+            const records = await readCollectionData(schemaId); 
+            const decryptedWallets = records.map((record: any) => ({
+                name: record.name,
+                address: record.wallet_address
+            })); 
+            setWallets(decryptedWallets);
+        } catch (error) {
+            console.error('Error fetching wallet addresses:', error);
+        }
+    };
 
   // Remove a wallet
   const removeWallet = (index: number) => {
@@ -47,6 +100,7 @@ const WalletBookmark = () => {
   const formatAddress = (address: string) => {
     return address.slice(0, 10) + "..." + address.slice(-4);
   };
+ 
 
   return (
     <div className="w-full min-w-xs p-6 ">
@@ -69,31 +123,45 @@ const WalletBookmark = () => {
         Save Wallet
       </button>
       <h2 className="text-xl font-semibold text-white mb-2">Wallet Bookmarks</h2>
-      <ul className="space-y-2 max-h-[240px] overflow-y-auto">
-        {wallets.map((wallet: any, index: number) => (
-          <li key={index} className="flex justify-between items-center bg-gray-700 p-2 rounded">
-            <div className="flex flex-col items-start">
-              <p className="text-green-400">{wallet.name}</p>
-              <div className="flex items-center">
-                <p className="text-green-400 font-bold">{formatAddress(wallet.address)}</p>
-                <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(wallet.address);
-                    toast.success("Address copied to clipboard!"); // Show copy address message
-                  }} 
-                  className="ml-2 text-gray-400 hover:text-green-500 cursor-pointer"
-                  aria-label="Copy address"
-                >
-                  <CgCopy className="w-4 h-4" />
-                </button>
+      {wallets.length === 0 ? (
+        <ul className="space-y-2 max-h-[240px] overflow-y-auto">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <li key={index} className="flex justify-between items-center bg-gray-700 p-2 rounded">
+              <div className="flex flex-col items-start"> 
+                <div className="h-4 bg-gray-600 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-500 rounded w-1/2"></div>
               </div>
-            </div>
-            <button onClick={() => removeWallet(index)} className="text-red-400 hover:text-red-700 cursor-pointer">
-             <FaTrash className="w-4 h-4 " />
-            </button>
-          </li>
-        ))}
-      </ul> 
+              <div className="h-4 bg-gray-600 rounded w-12"></div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <ul className="space-y-2 max-h-[240px] overflow-y-auto">
+          {wallets.map((wallet: any, index: number) => (
+            <li key={index} className="flex justify-between items-center bg-gray-700 p-2 rounded">
+              <div className="flex flex-col items-start">
+                <p className="text-green-400">{wallet.name}</p>
+                <div className="flex items-center">
+                  <p className="text-green-400 font-bold">{formatAddress(wallet.address)}</p>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(wallet.address);
+                      toast.success("Address copied to clipboard!"); // Show copy address message
+                    }} 
+                    className="ml-2 text-gray-400 hover:text-green-500 cursor-pointer"
+                    aria-label="Copy address"
+                  >
+                    <CgCopy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <button onClick={() => removeWallet(index)} className="text-red-400 hover:text-red-700 cursor-pointer">
+               <FaTrash className="w-4 h-4 " />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
