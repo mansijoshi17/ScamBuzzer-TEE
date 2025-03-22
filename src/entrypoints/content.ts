@@ -178,43 +178,7 @@ const parseDate = (dateString: string | undefined): Date | null => {
 export default defineContentScript({
   matches: ["<all_urls>"],
   main() {
-    console.log("✅ Phishing Detector Content Script Loaded");
-
-    const GOOGLE_SAFE_BROWSING_API_KEY =
-      "AIzaSyAtv07ftLQ0irh31f6jw9xYJ2D9R58iw5E";
-    const SAFE_BROWSING_API_URL = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GOOGLE_SAFE_BROWSING_API_KEY}`;
-
-    const checkLinkWithGoogle = async (link: string): Promise<boolean> => {
-      const requestBody = {
-        client: { clientId: "phishing-detector", clientVersion: "1.0" },
-        threatInfo: {
-          threatTypes: [
-            "MALWARE",
-            "SOCIAL_ENGINEERING",
-            "UNWANTED_SOFTWARE",
-            "POTENTIALLY_HARMFUL_APPLICATION",
-          ],
-          platformTypes: ["ANY_PLATFORM"],
-          threatEntryTypes: ["URL"],
-          threatEntries: [{ url: link }],
-        },
-      };
-
-      try {
-        const response = await fetch(SAFE_BROWSING_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        });
-
-        const data = await response.json();
-        return data.matches && data.matches.length > 0;
-      } catch (error) {
-        console.error("❌ Google Safe Browsing Error:", error);
-        return false;
-      }
-    };
-
+    console.log("✅ Phishing Detector Content Script Loaded"); 
     const observer = new MutationObserver((mutations) => {
       observer.disconnect();
 
