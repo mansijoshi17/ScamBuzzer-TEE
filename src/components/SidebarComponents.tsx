@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaHome, FaStar, FaCog, FaUserPlus, FaBookmark } from "react-icons/fa";
+import { FaHome, FaStar, FaCog, FaUserPlus, FaBookmark, FaExclamationCircle } from "react-icons/fa";
 import { Link, useLocation } from 'react-router-dom';
 
 export const SidebarComponents = () => {
@@ -18,11 +18,16 @@ export const SidebarComponents = () => {
                 >
                     <FaStar className={`hover:text-green-400 ${activeTab === 'contract' ? 'text-green-500' : 'text-gray-500'}`} />
                 </Link>
-               
+                
                 <Link to="/bookmark"
                     className={`text-gray-500 text-2xl  cursor-pointer ${activeTab === 'bookmark' ? 'text-green-500' : ''}`}
                 >
                     <FaBookmark className={`hover:text-green-400 ${activeTab === 'bookmark' ? 'text-green-500' : 'text-gray-500'}`} />
+                </Link>
+                <Link to="/scamreport"
+                    className={`text-gray-500 text-2xl  cursor-pointer ${activeTab === 'scamreport' ? 'text-green-500' : ''}`}
+                >
+                    <FaExclamationCircle className={`hover:text-green-400 ${activeTab === 'scamreport' ? 'text-green-500' : 'text-gray-500'}`} />
                 </Link>
                 <Link to="/settings"
                     className={`text-gray-500 text-2xl  cursor-pointer ${activeTab === 'settings' ? 'text-green-500' : ''}`}

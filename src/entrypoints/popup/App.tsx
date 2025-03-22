@@ -1,5 +1,3 @@
- 
-
 import { HashRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { Home } from "@/components/Home";
 import { Settings } from "@/components/Settings";  
@@ -8,6 +6,7 @@ import { Header } from "@/components/Header";
 import Contract from "@/pages/Contract";
 import { Toaster } from "react-hot-toast";
 import Bookmark from "@/pages/Bookmark";
+import ScamReport from "@/pages/ScamReport";
 
 const App = () => {
   return (
@@ -22,6 +21,7 @@ const App = () => {
           <Route path="/settings" element={<Settings />} /> 
           <Route path="/Contract" element={<Contract />} />
           <Route path="/Bookmark" element={<Bookmark />} />
+          <Route path="/ScamReport" element={<ScamReport />} />
         </Routes>
         </div>
       </div> 
