@@ -43,6 +43,43 @@ export default defineBackground({
     
         return true; 
       }
+      if (request.type === "analyzeTweeter") {
+        console.log("📩 Received Tweeter Content for Analysis:", request?.tweeterContent);
+    
+        fetch("https://nilai-a779.nillion.network/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer Nillion2025",
+            'Access-Control-Allow-Origin': '*'
+          },
+          body: JSON.stringify({
+            model: "meta-llama/Llama-3.1-8B-Instruct",
+            messages: [
+              {
+                role: "user",
+                content: `Analyze the following tweeter dm for phishing scams: "${request.tweeterContent}"`,
+              },
+            ],
+            temperature: 0.2,
+            top_p: 0.95,
+            max_tokens: 2048,
+            stream: false,
+            nilrag: {},
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("✅ API Response from Nillion:", data);
+            sendResponse({ analysis: data.choices[0].message.content });
+          })
+          .catch((error) => {
+            console.error("❌ Error analyzing email:", error);
+            sendResponse({ error: "Failed to analyze email" });
+          });
+    
+        return true; 
+      } 
 
       
     }); 
