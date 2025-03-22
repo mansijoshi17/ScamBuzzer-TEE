@@ -1,4 +1,5 @@
- 
+import { GoPlus, ErrorCode } from "@goplus/sdk-node";
+import { analyzeEmail } from "@/utils/utils";
 import axios from "axios";
 
 const freeHostingProviders = [
@@ -105,8 +106,8 @@ const performSecurityChecks = (
   const warnings = [];
 
   if (domainAge) {
-    warnings.push(`Domain Age: ${domainAge.age}`);
-    if (domainAge.color !== "#00FF00") {
+    if (domainAge.color == "#FF4444" || domainAge.color == "#FFCC00") {
+      warnings.push(`Domain Age: ${domainAge.age}`);
       warnings.push(
         "⚠️ This domain is relatively new. Please proceed with caution."
       );
@@ -178,7 +179,43 @@ const parseDate = (dateString: string | undefined): Date | null => {
 export default defineContentScript({
   matches: ["<all_urls>"],
   main() {
-    console.log("✅ Phishing Detector Content Script Loaded"); 
+    console.log("✅ Phishing Detector Content Script Loaded");
+
+    const GOOGLE_SAFE_BROWSING_API_KEY =
+      "AIzaSyAtv07ftLQ0irh31f6jw9xYJ2D9R58iw5E";
+    const SAFE_BROWSING_API_URL = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GOOGLE_SAFE_BROWSING_API_KEY}`;
+
+    const checkLinkWithGoogle = async (link: string): Promise<boolean> => {
+      const requestBody = {
+        client: { clientId: "phishing-detector", clientVersion: "1.0" },
+        threatInfo: {
+          threatTypes: [
+            "MALWARE",
+            "SOCIAL_ENGINEERING",
+            "UNWANTED_SOFTWARE",
+            "POTENTIALLY_HARMFUL_APPLICATION",
+          ],
+          platformTypes: ["ANY_PLATFORM"],
+          threatEntryTypes: ["URL"],
+          threatEntries: [{ url: link }],
+        },
+      };
+
+      try {
+        const response = await fetch(SAFE_BROWSING_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        });
+
+        const data = await response.json();
+        return data.matches && data.matches.length > 0;
+      } catch (error) {
+        console.error("❌ Google Safe Browsing Error:", error);
+        return false;
+      }
+    };
+
     const observer = new MutationObserver((mutations) => {
       observer.disconnect();
 
@@ -243,23 +280,20 @@ export default defineContentScript({
 
         const domainAge = checkDomainAge(data.whoisData.creationDate);
         const warnings = performSecurityChecks(url, domainAge);
-
-        console.log(warnings, "warnings");
-
-        if(!url.includes("messages")){
+        if (!url.includes("messages")) {
           if (warnings.length > 0) {
             const alertBox = createAlertBox(url, warnings, domainAge.color);
-  
+
             alertBox.style.position = "fixed";
             alertBox.style.top = "20px";
             alertBox.style.right = "20px";
             alertBox.style.zIndex = "999999";
             alertBox.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
             alertBox.style.borderRadius = "4px";
-  
+
             if (document.body) {
               document.body.insertBefore(alertBox, document.body.firstChild);
-  
+
               // Remove the alert box after 30 seconds instead of 10
               setTimeout(() => {
                 if (alertBox && alertBox.parentNode) {
@@ -275,59 +309,180 @@ export default defineContentScript({
     };
 
     // Load user settings and execute detection accordingly
-    chrome.storage.local.get(["web3Safe", "twitterPhishing", "emailPhishing"], async (settings) => {
-      console.log("🔍 Loaded Settings:", settings);
+    chrome.storage.local.get(
+      ["web3Safe", "twitterPhishing", "emailPhishing"],
+      async (settings) => {
+        console.log("🔍 Loaded Settings:", settings);
 
-      if (settings.web3Safe) {
-        console.log("✅ Running Web3 Safe Browsing...");
-        const url = window.location.href;
-        scanWeb3Safe(url);
-      }
+        if (settings.web3Safe) {
+          console.log("✅ Running Web3 Safe Browsing...");
+          const url = window.location.href;
+          scanWeb3Safe(url);
+        }
 
-      if (settings.twitterPhishing) {
-        console.log("✅ Running Twitter Phishing Warning...");
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true,
-        });
-      }
+        if (settings.twitterPhishing) {
+          console.log("✅ Running Twitter Phishing Warning...");
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+          });
+        }
 
-      if (settings.emailPhishing && window.location.href.includes("mail.google.com")) {
-        console.log("✅ Running Email Phishing Warning...");   
-          const emailContent = "Dear user, your account has been compromised. Please click the link to verify your identity: http://fake-link.com";
-         
-         chrome.runtime.sendMessage(
-          {
-            type: "analyzeEmail",
-            emailContent: emailContent,
-          },
-          (response) => {
-            console.log(response,"  response");
-            if (response && response.analysis) {
-              handlePhishingAlert(response.analysis);
-              console.log("Phishing Analysis Result:", response.analysis);
-            } else {
-              console.error("Failed to analyze email content.");
+        // if (settings.emailPhishing && window.location.href.includes("mail.google.com")) {
+        //   console.log("✅ Running Email Phishing Warning...");
+
+        //   function extractEmailContent() {
+        //     // Gmail wraps message bodies in elements with the 'ii' and 'gt' classes
+        //     const emailBodies = document.querySelectorAll('.ii.gt');
+        //     let combinedContent = "";
+
+        //     emailBodies.forEach((el) => {
+        //       // Get the inner HTML (for rich content) or innerText (for plain text)
+        //       combinedContent += el.innerText + "\n\n";
+        //     });
+
+        //     if (combinedContent.trim()) {
+        //       console.log("📬 Full Email Content:\n", combinedContent);
+        //       chrome.runtime.sendMessage(
+        //         {
+        //           type: "analyzeEmail",
+        //           emailContent: combinedContent,
+        //         },
+        //         (response) => {
+        //           console.log(response, "  response");
+        //           if (response && response.analysis) {
+        //             handlePhishingAlert(response.analysis);
+        //             console.log("Phishing Analysis Result:", response.analysis);
+        //           } else {
+        //             console.error("Failed to analyze email content.");
+        //           }
+        //         }
+        //       );
+        //     }
+        //   }
+
+        //   // Gmail is an SPA — we observe DOM changes
+        //   const observer = new MutationObserver(() => {
+        //     const emailView = document.querySelector("div[role='main'] .ii.gt");
+        //     if (emailView) {
+        //       extractEmailContent();
+        //     }
+        //   });
+
+        //   observer.observe(document.body, {
+        //     childList: true,
+        //     subtree: true,
+        //   });
+
+        // }
+        if (
+          settings.emailPhishing &&
+          window.location.href.includes("mail.google.com")
+        ) {
+          console.log("✅ Running Email Phishing Warning...");
+
+          let lastScannedEmail = ""; // Keep track of last analyzed content
+
+          function extractEmailContent() {
+            const emailBodies = document.querySelectorAll(".ii.gt");
+            let combinedContent = "";
+
+            emailBodies.forEach((el) => {
+              combinedContent += el.innerText + "\n\n";
+            });
+
+            combinedContent = combinedContent.trim();
+
+            if (combinedContent && combinedContent !== lastScannedEmail) {
+              lastScannedEmail = combinedContent;
+
+              chrome.runtime.sendMessage(
+                {
+                  type: "analyzeEmail",
+                  emailContent: combinedContent,
+                },
+                (response) => {
+                  if (response && response.analysis) {
+                    handlePhishingAlert(response.analysis);
+                  } else {
+                    console.error("Failed to analyze email content.");
+                  }
+                }
+              );
             }
           }
-        );
+
+          const observer = new MutationObserver(() => {
+            const emailView = document.querySelector("div[role='main'] .ii.gt");
+
+            if (emailView) {
+              extractEmailContent();
+            }
+          });
+
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+          });
+        }
       }
-    });
+    );
   },
 });
 
-function handlePhishingAlert(analysis: string) {
+async function handlePhishingAlert(analysis: string) {
   const redFlags = [
-    "Urgency", "Suspicious Link", "Lack of Personalization",
-    "Grammar and Spelling", "Spoofed Email", "Malicious Link",
-    "Social Engineering"
+    "Urgency",
+    "Suspicious Link",
+    "Lack of Personalization",
+    "Spoofed Email",
+    "Malicious Link",
+    "phishing scams",
+    "Social Engineering",
   ];
 
-  // Check if any red flags are present in the analysis
-  const detectedFlags = redFlags.filter(flag => analysis.includes(flag));
 
-  if (detectedFlags.length > 0) {
-    console.warn("🚨 Phishing Detected! Red Flags:", detectedFlags);
+  // Check if any red flags are present in the analysis
+  const detectedFlags = redFlags.filter((flag) => analysis.includes(flag));
+
+  // Extract URLs from the analysis using regex
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urls = analysis.match(urlRegex) || [];
+
+  let securityWarnings: string[] = [];
+
+  if (urls.length > 0) {
+    for (const url of urls) {
+      // Get domain info for security checks
+      const domain = url
+        .replace(/^https?:\/\//, "")
+        .replace(
+          /^(?:www\.|api\.|docs\.|app\.|admin\.|test\.|staging\.|dev\.|manage\.|blog\.|support\.|mail\.|shop\.|static\.|cdn\.|analytics\.|search\.|demo\.|mvp\.)/,
+          ""
+        );
+
+      const response = await fetch(
+        `https://api2.cointopper.com/categories/whois?domain=${domain}`
+      );
+      const data = await response.json();
+
+      const domainAge = checkDomainAge(data.whoisData.creationDate);
+
+      const warnings = performSecurityChecks(url,domainAge);
+
+      if (warnings.length > 0) {
+        securityWarnings.push(...warnings);
+      }
+    }
+  }
+
+  const allWarnings = [
+    ...detectedFlags.map(flag => `⚠️ Detected: ${flag}`),
+    ...securityWarnings
+  ];
+
+  if (allWarnings.length > 0) {
+    console.warn("🚨 Phishing Detected! Red Flags:", allWarnings);
 
     const alertDiv = document.createElement("div");
     alertDiv.innerHTML = `
@@ -348,7 +503,9 @@ function handlePhishingAlert(analysis: string) {
           <div>
             <strong>🚨 WARNING: Phishing Detected!</strong>
             <p style="margin: 4px 0; font-size: 14px;">The email contains signs of a phishing attempt.</p>
-            <p style="margin: 4px 0; font-size: 14px;">Detected Issues: ${detectedFlags.join(", ")}</p>
+            <p style="margin: 4px 0; font-size: 14px;">Detected Issues: ${detectedFlags.join(
+              ", "
+            )}</p>
             <p style="margin: 4px 0; font-size: 14px; color: yellow;">
               ⚠️ Do NOT click on any links or provide personal information!
             </p>
@@ -363,7 +520,7 @@ function handlePhishingAlert(analysis: string) {
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(alertDiv);
 
     // Remove alert after 10 seconds
@@ -372,4 +529,3 @@ function handlePhishingAlert(analysis: string) {
     console.log("✅ No phishing detected. No alert needed.");
   }
 }
-
