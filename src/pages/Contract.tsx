@@ -44,6 +44,7 @@ export default function Contract() {
     try {
       const response = await GoPlus.addressSecurity(chainId.id, contractAddress, 30);
       setScanResult(response.result);
+      console.log('response contract', response);
       toast.success("Contract security scan completed");
     } catch (error) {
       toast.error("An error occurred during the scan");
@@ -77,7 +78,7 @@ export default function Contract() {
         </button>
 
         {scanResult && (
-          <div className="p-4 border rounded bg-gray-900">
+          <div className="p-4 border rounded bg-gray-900 max-h-[280px] overflow-y-auto">
             <h4 className="text-lg font-semibold text-white">Scan Result for <span className="text-green-500">{contractAddress.slice(0, 6)}...{contractAddress.slice(-4)}</span></h4>
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div className="text-green-500"><strong>Blacklist Doubt:</strong> {scanResult.blacklist_doubt}</div>

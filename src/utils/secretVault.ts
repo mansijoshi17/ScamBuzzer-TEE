@@ -73,8 +73,8 @@ export async function createScamReportSchema() {
 
 export async function getScamReportSchema(schemaId: string) {
     const storedSchemaId = await new Promise<string>((resolve) => {
-        chrome.storage.local.get(['schemaId'], (result) => {
-            resolve(result.schemaId || schemaId);
+        chrome.storage.local.get(['reportSchemaId'], (result) => {
+            resolve(result.storedSchemaId || schemaId);
         });
     });
     if (!scamReportSchemaId) {
@@ -91,6 +91,11 @@ export async function getScamReportSchema(schemaId: string) {
 export async function writeScamReportData(schemaId: string, data: any) {
     const collection = await getScamReportSchema(schemaId);
     return collection.writeToNodes(data);
+}
+
+export async function readScamReportData(schemaId: string) {
+    const collection = await getScamReportSchema(schemaId);
+    return collection.readFromNodes({});
 }
 
 

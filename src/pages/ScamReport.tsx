@@ -42,10 +42,10 @@ const ScamReport = () => {
   async function main() {
     try {
         const newSchema = await createScamReportSchema(); 
-        const schemaId = newSchema[0].schemaId;
-        setSchemaId(schemaId); 
-        chrome.storage.local.set({ schemaId }, () => {
-            console.log('Schema ID stored in Chrome storage:', schemaId);
+        const reportSchemaId = newSchema[0].schemaId;
+        setSchemaId(reportSchemaId); 
+        chrome.storage.local.set({ reportSchemaId }, () => {
+            console.log('Schema ID stored in Chrome storage:', reportSchemaId);
         });
     } catch (error: any) {
         console.error('❌ Failed to use SecretVaultWrapper:', error.message);

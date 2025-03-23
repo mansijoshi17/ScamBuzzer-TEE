@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from 'uuid'; 
-import {  createSchema , writeCollectionData, readCollectionData} from '../utils/utils';
+import {  createSchema , writeCollectionData, readCollectionData} from '../utils/secretVault';
 import { FaTrash } from "react-icons/fa";
 import { CgCopy } from "react-icons/cg";
 
@@ -53,8 +53,7 @@ const WalletBookmark = () => {
                     name: walletName,
                     wallet_address: walletAddress 
                 }
-            ];
-
+            ]; 
             
             const res = await  writeCollectionData(schemaId, dataToWrite);
             console.log('res', res); 
@@ -103,8 +102,8 @@ const WalletBookmark = () => {
  
 
   return (
-    <div className="w-full min-w-xs p-6 ">
-      <h2 className="text-xl font-semibold text-white mb-2">Wallet Bookmarks</h2> 
+    <div className="w-full min-w-xs p-4 ">
+      <h2 className="text-lg font-semibold text-green-500 mb-2">Stay protected from address poisoning</h2> 
       <input
         type="text"
         placeholder="Wallet Name"
@@ -122,7 +121,7 @@ const WalletBookmark = () => {
       <button onClick={saveWallet} className="cursor-pointer w-full p-3 mb-4 bg-green-500 text-white rounded hover:bg-green-600 transition">
         Save Wallet
       </button>
-      <h2 className="text-xl font-semibold text-white mb-2">Wallet Bookmarks</h2>
+      <h2 className="text-lg font-semibold text-green-500 ">Wallet Bookmarks</h2>
       {wallets.length === 0 ? (
         <ul className="space-y-2 max-h-[240px] overflow-y-auto">
           {Array.from({ length: 5 }).map((_, index) => (
@@ -136,7 +135,7 @@ const WalletBookmark = () => {
           ))}
         </ul>
       ) : (
-        <ul className="space-y-2 max-h-[240px] overflow-y-auto">
+        <ul className="space-y-2 max-h-[230px] overflow-y-auto">
           {wallets.map((wallet: any, index: number) => (
             <li key={index} className="flex justify-between items-center bg-gray-700 p-2 rounded">
               <div className="flex flex-col items-start">

@@ -440,7 +440,7 @@ async function handlePhishingAlert(analysis: string) {
     "phishing scams",
     "Social Engineering",
   ];
-
+  console.log('analysis', analysis);
 
   // Check if any red flags are present in the analysis
   const detectedFlags = redFlags.filter((flag) => analysis.includes(flag));

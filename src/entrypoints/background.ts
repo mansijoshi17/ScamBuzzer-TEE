@@ -21,7 +21,7 @@ export default defineBackground({
             messages: [
               {
                 role: "user",
-                content: `Analyze the following email for phishing scams: "${request.emailContent}"`,
+                content: `Analyze the following email content for phishing scams, suspicious links, and spoofed emails. Identify any malicious elements and provide a phishing score (0-100) based on risk level. Return a one-line summary indicating the threat level and key findings. Email content: "${request.emailContent}"`,
               },
             ],
             temperature: 0.2,
@@ -80,8 +80,6 @@ export default defineBackground({
     
         return true; 
       } 
-
-      
     }); 
 
     chrome.contextMenus.create({
